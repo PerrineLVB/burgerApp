@@ -29,21 +29,21 @@
 // }
 
 const Product = (props) => {
-    <div className="card m-3">
+    return <div className="card m-3">
         <div id={props.details.id} className="card-body text-center" style={{ width: 15 + 'rem' }}>
             <img src={props.details.img} className="card-img-top"></img>
             <h3 className="card-title text-start">{props.details.name}</h3>
             <h5 className="card-text text-end">{props.details.price}€</h5>
-            <a onClick={props.handleClick} className="btn btn-outline-warning fa-solid fa-burger"></a>
+            <button onClick={props.addProduct} className="btn btn-outline-warning fa-solid fa-burger"></button>
         </div>
     </div>
 }
 
 const Order = (props) => {
-    return <div id={props.details.id} className="row mb-2">
+    return <div className="row mb-2">
         <div className="col-5">{props.details.name}</div>
         <div className="col-3">{props.details.price}€</div>
-        <div className="col-4"><a onClick={props.moreBtn} className="btn btn-warning fa-solid fa-plus"></a>Qty<a onClick={props.lessBtn} className="btn btn-warning fa-solid fa-minus"></a></div>
+        <div id={props.details.id} className="col-4"><button onClick={props.addProduct} className="btn btn-warning fa-solid fa-plus me-1"></button>{props.details.quantity}<button onClick={props.removeProduct} className="btn btn-warning fa-solid fa-minus ms-1"></button></div>
     </div>
 }
 
@@ -62,30 +62,42 @@ class App extends React.Component {
         ordered: []
     }
 
-    handleClick = (e) => {
-        const clickedElementId = e.target.parentNode.id // renvoie l'id de la div dans laquelle est le btn
-        const clicked = this.state.products.find(element => element.id == clickedElementId) // cherche l'élément qui correspond à l'id de l'élément cliqué
-        // const copiedOrdered = this.state.ordered.slice() // on crée une copie du tableau à modifier soit avec slice
-        const copiedOrdered = [...this.state.ordered] // soit avec le spread operator ... qui permet de créer une copie
-        copiedOrdered.push(clicked) // on lui ajoute un élément
-        this.setState({ ordered: copiedOrdered })
+    addProduct = (e) => {
+        const clickedElementId = e.target.parentNode.id; // renvoie l'id de la div dans laquelle est le btn
+        const clickedProduct = this.state.products.find(element => element.id == clickedElementId); // cherche l'élément qui correspond à l'id de l'élément cliqué
+        const copiedOrdered = [...this.state.ordered]; // on crée une copie du tableau à modifier avec le spread operator ... qui permet de créer une copie
+        let orderedProduct = this.state.ordered.find(element => element.id == clickedElementId);
+        if (!orderedProduct) {      // on check si le produit n'existe pas dans la liste des produits commandés
+            orderedProduct = { ...clickedProduct }; // copie de l'objet concerné
+            orderedProduct.quantity = 0;             // initialisation de sa quantité
+            copiedOrdered.push(orderedProduct); // on ajoute l'élément cliqué au tableau copié
+        }
+        orderedProduct.quantity++;
+        this.setState({ ordered: copiedOrdered });
     }
 
-    moreBtn = () => {
-
-    }
-
-    lessbtn = () => {
+    removeProduct = (e) => {
+        const clickedElementId = e.target.parentNode.id; // renvoie l'id de la div dans laquelle est le btn
+        const copiedOrdered = [...this.state.ordered]; // on crée une copie du tableau à modifier avec le spread operator ... qui permet de créer une copie
+        let orderedProduct = this.state.ordered.find(element => element.id == clickedElementId);
+        if (orderedProduct.quantity > 1) {
+            orderedProduct.quantity--;
+            this.setState({ ordered: copiedOrdered });
+        } else {
+            const result = copiedOrdered.filter(item => item.id != clickedElementId)
+            this.setState({ ordered: result });
+        }
 
     }
 
     render() {
         const productsList = this.state.products.map(product =>
-            <Product key={product.id} details={product} handleClick={this.handleClick} />
+            <Product key={product.id} details={product} addProduct={this.addProduct} />
         )
 
         const orderedProducts = this.state.ordered.map(order =>
-            <Order key={order.id} details={order} />)
+            <Order key={order.id} details={order} addProduct={this.addProduct} removeProduct={this.removeProduct} />
+        )
 
         return (
             <div className="row">
@@ -93,7 +105,7 @@ class App extends React.Component {
                     {productsList}
                 </div>
                 <div id="order" className="border p-3 col-4 bg-white">
-                    <h2 className="text-center">YOUR ORDER</h2>
+                    <h1 className="text-center">YOUR ORDER</h1>
                     <hr></hr>
                     {orderedProducts}
                     <hr></hr>
