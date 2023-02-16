@@ -84,7 +84,7 @@ class App extends React.Component {
             orderedProduct.quantity--;
             this.setState({ ordered: copiedOrdered });
         } else {
-            const result = copiedOrdered.filter(item => item.id != clickedElementId)
+            const result = copiedOrdered.filter(element => element.id != clickedElementId)
             this.setState({ ordered: result });
         }
 
