@@ -33,19 +33,34 @@ const Product = (props) => {
         <div id={props.details.id} className="card-body text-center" style={{ width: 15 + 'rem' }}>
             <img src={props.details.img} className="card-img-top"></img>
             <h3 className="card-title text-start">{props.details.name}</h3>
-            <h5 className="card-text text-end">{props.details.price}€</h5>
+            <h5 className="card-text text-end">{props.details.price.toFixed(2)}€</h5>
             <button onClick={props.addProduct} className="btn btn-outline-warning fa-solid fa-burger"></button>
         </div>
     </div>
 }
 
 const Order = (props) => {
-    return <div className="row mb-2">
-        <div className="col-5">{props.details.name}</div>
-        <div className="col-3">{props.details.price}€</div>
-        <div id={props.details.id} className="col-4"><button onClick={props.addProduct} className="btn btn-warning fa-solid fa-plus me-1"></button>{props.details.quantity}<button onClick={props.removeProduct} className="btn btn-warning fa-solid fa-minus ms-1"></button></div>
+    return (<div className="row mb-2">
+        <div className="col-4">{props.details.name}</div>
+        <div className="col-2">{props.details.price}€</div>
+        <div className="col-2">{props.details.total.toFixed(2)}€</div>
+        <div id={props.details.id} className="col-4">
+            <button onClick={props.removeProduct} className="btn btn-warning fa-solid fa-minus ms-1"></button>
+            <span className="px-1">{props.details.quantity}</span>
+            <button onClick={props.addProduct} className="btn btn-warning fa-solid fa-plus me-1"></button>
+        </div>
     </div>
+    )
 }
+
+/*
+const Total = (props) => {
+    return (<React.Fragment>
+    <hr></hr>
+    <p>TOTAL : {props.details.totalOrder}</p>
+    </React.Fragment>)
+}
+*/
 
 class App extends React.Component {
     state = {
@@ -59,7 +74,8 @@ class App extends React.Component {
             { id: 7, name: "Croque McDo", price: 2.95, img: "https://eu-images.contentstack.com/v3/assets/blt5004e64d3579c43f/blt8f125a846d60b3e7/607ffe5cf77631234c4b45db/66789245c6dd98a5cd0730195536ee9b46c494bb.png?auto=webp" },
             { id: 8, name: "Nuggets (x4)", price: 1.95, img: "https://eu-images.contentstack.com/v3/assets/blt5004e64d3579c43f/blt8e73c57a90276fd9/620fd69aab1b594c886855ca/SACHET_4_MCNUGGETS_DD.png?auto=webp" }
         ],
-        ordered: []
+        ordered: [],
+        total: 0
     }
 
     addProduct = (e) => {
@@ -70,10 +86,14 @@ class App extends React.Component {
         if (!orderedProduct) {      // on check si le produit n'existe pas dans la liste des produits commandés
             orderedProduct = { ...clickedProduct }; // copie de l'objet concerné
             orderedProduct.quantity = 0;             // initialisation de sa quantité
+            orderedProduct.total = 0;
             copiedOrdered.push(orderedProduct); // on ajoute l'élément cliqué au tableau copié
         }
         orderedProduct.quantity++;
+        orderedProduct.total += orderedProduct.price;
         this.setState({ ordered: copiedOrdered });
+        const total = copiedOrdered.map(order => order.total).reduce((a, b) => a + b);
+        this.setState({ total: total });
     }
 
     removeProduct = (e) => {
@@ -82,12 +102,15 @@ class App extends React.Component {
         let orderedProduct = this.state.ordered.find(element => element.id == clickedElementId);
         if (orderedProduct.quantity > 1) {
             orderedProduct.quantity--;
+            orderedProduct.total -= orderedProduct.price;
             this.setState({ ordered: copiedOrdered });
         } else {
             const result = copiedOrdered.filter(element => element.id != clickedElementId)
             this.setState({ ordered: result });
+            orderedProduct.total -= orderedProduct.price;
         }
-
+        const total = copiedOrdered.map(order => order.total).reduce((a, b) => a + b);
+        this.setState({ total: total });
     }
 
     render() {
@@ -99,6 +122,11 @@ class App extends React.Component {
             <Order key={order.id} details={order} addProduct={this.addProduct} removeProduct={this.removeProduct} />
         )
 
+        let totalDisplay = null;
+        if (this.state.total > 0) {
+            totalDisplay = <React.Fragment><hr></hr><h2 className="text-center">TOTAL : {this.state.total.toFixed(2)}€</h2></React.Fragment>
+        }
+
         return (
             <div className="row">
                 <div id="menu" className="d-flex flex-wrap justify-content-center border col-8">
@@ -108,8 +136,8 @@ class App extends React.Component {
                     <h1 className="text-center">YOUR ORDER</h1>
                     <hr></hr>
                     {orderedProducts}
-                    <hr></hr>
-                    <h2>TOTAL :</h2>
+                    {totalDisplay}
+                    {/* {this.state.total > 0 && <h2 className="text-center">TOTAL : {this.state.total.toFixed(2)}€</h2>} */}
                 </div>
             </div>
         )
